@@ -1,3 +1,5 @@
+Notes from LinearRegression.pdf
+
 What kind of polynomial should be used? Linear, quadratic, cubic...
 	Best to generalise:
 	Θ.X, where Θ is the coefficients vector, and X is a vector for each term, e.g. <1, x, x^2, x^3...> or <1, x, x^2, w>
@@ -30,3 +32,28 @@ Must find the minima of L(Θ). Does it have a single minimum? Local minima? What
 	The algorithm is on the slides, too complicated to note here.
 	Problems are:
 		Requires matrix inversion. This is slow and sometimes not possible.
+
+
+Notes from FeatureEngineering.pdf
+
+Example used in lecture is a plot of age vs height, with a gradual gradient, then a steep gradient, then another gradual gradient.
+The different features demonstrated are, assuming Θ.X, and letting a = age:
+	X = <1, a>
+		This is a straight line graph, not very good.
+	X = <1, a, a^2>
+		Quadratic fits the data better.
+	X = <1, a, a^2, a^3>, X = <1, a, a^2, a^3, a^4>
+		Cubic and quartic fit even better.
+	Come up with a big enough polynomial and you can fit the data exactly and have 0 loss.
+This is clearly not the best approach. Must use domain knowledge.
+	We know height grows differently at different ages, so we can split the age axis into different regions.
+	This is a piece-wise linear model.
+
+The model used on the lecture slides is:
+	X = <1, a, (a - 10)+, (a - 15)+>, where ()+ means set whatever is in the brackets to 0 if it's < 0
+	This allows the fitting of three straight lines. Ages 10 and 15, where the gradient changes, are called knots.
+
+It is wise to consider occam's razor when selecting features. L(Θ) for the previous model could be improved by adding in a^2, a^3, a^4, etc.
+But, although this would provide a better fit, it would not be a better explanation for the data.
+If some different age-height data is provided, it is likely that the simpler model will fit it better than the simple model plus a quartic.
+
