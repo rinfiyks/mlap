@@ -1,0 +1,32 @@
+What kind of polynomial should be used? Linear, quadratic, cubic...
+	Best to generalise:
+	Θ.X, where Θ is the coefficients vector, and X is a vector for each term, e.g. <1, x, x^2, x^3...> or <1, x, x^2, w>
+
+What sort of loss function? Absolute value loss, squared value loss, ε-sensitive loss...
+	Probably squared loss (AKA least squares).
+
+Total loss is Σ_i loss(y_i, f(x_i)) where y_i is the actual value and f(x_i) is the estimated y.
+
+Let L(Θ) = Σ_i loss(y_i, Θ.X_i), Θ.X_i is equal to f(x_i)
+So L(Θ) is the total loss.
+
+Task is to find a good value of Θ. Let Θ* denote the "best" solution.
+
+Must find the minima of L(Θ). Does it have a single minimum? Local minima? What does L(Θ) look like?
+
+	Gradiant descent is a method for finding minima. It follows the curve in the direction of descent.
+	The algorithm is:
+		Start at 0 (or wherever).
+		Canculate gradiant.
+		Take a "step" in that direction, size is judged by the "learning rate".
+		Repeat until termination criteria.
+	Problems are:
+		Have to guess learning rate. Big or small steps?
+		Have to guess stopping criteria.
+		Can be slow.
+		Methods exist that do not require prespecifying learning rate or stopping criteria.
+
+	A matrix formulation can be used to derive an exact solution in closed form.
+	The algorithm is on the slides, too complicated to note here.
+	Problems are:
+		Requires matrix inversion. This is slow and sometimes not possible.
