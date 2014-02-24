@@ -14,10 +14,10 @@ Task is to find a good value of Θ. Let Θ* denote the "best" solution.
 
 Must find the minima of L(Θ). Does it have a single minimum? Local minima? What does L(Θ) look like?
 
-	Gradiant descent is a method for finding minima. It follows the curve in the direction of descent.
+	Gradient descent is a method for finding minima. It follows the curve in the direction of descent.
 	The algorithm is:
 		Start at 0 (or wherever).
-		Canculate gradiant.
+		Calculate gradient.
 		Take a "step" in that direction, size is judged by the "learning rate".
 		Repeat until termination criteria.
 	Problems are:
