@@ -16,11 +16,15 @@ def linear(InputFileName):
 
     row_data = collate_row_data(raw_data)
 
-    print("Starting fmin...")
+    training_row_data = row_data[0::2]
+    testing_row_data = row_data[1::2]
+
     theta = scipy.optimize.fmin(calculate_mean_squared_error, x0=initial_theta,
-                                args=tuple([row_data]))
-    print("fmin finished.")
+                                args=tuple([training_row_data]))
+    print("Theta:")
     print(theta)
+    print("Testing data MSE:")
+    print(calculate_mean_squared_error(theta, testing_row_data))
     return 0
 
 
@@ -28,7 +32,7 @@ def calculate_mean_squared_error(theta, row_data):
     total_squared_loss = 0
 
     for row in row_data:
-        total_squared_loss += (numpy.dot(theta, row[2] + row[3]) - row[1])**2
+        total_squared_loss += (numpy.dot(theta, row[1]) - row[0])**2
 
     total_squared_loss /= len(row_data)
 
@@ -41,17 +45,14 @@ def collate_row_data(raw_data):
 
     for i in xrange(10, len(raw_data)):
         row_data.append([])
-        row_data[-1].append(float(raw_data[i][0]))  # append volume
         row_data[-1].append(float(raw_data[i][1]))  # append price
 
-        volumes = []
-        prices = []
+        previous_data = []
 
         for j in range(0, 10):
-            volumes.append(float(raw_data[i - j - 1][0]))
-            prices.append(float(raw_data[i - j - 1][1]))
-        row_data[-1].append(volumes)
-        row_data[-1].append(prices)
+            previous_data.append(float(raw_data[i - j - 1][0]))
+            previous_data.append(float(raw_data[i - j - 1][1]))
+        row_data[-1].append(previous_data)
 
     return row_data
 
