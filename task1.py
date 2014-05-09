@@ -12,9 +12,9 @@ previous_days_count = 10  # the number of previous days given
 def linear(InputFileName):
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
 
-    initial_theta = [0] * 2 * previous_days_count
-
     row_data = collate_row_data(raw_data)
+
+    initial_theta = [0] * len(row_data[0][1])
 
     training_row_data = row_data[0::2]
     testing_row_data = row_data[1::2]
@@ -24,7 +24,7 @@ def linear(InputFileName):
     print("Theta:")
     print(theta)
     print("Testing data MSE:")
-    print(calculate_mean_squared_error(theta, testing_row_data))
+    calculate_mean_squared_error(theta, testing_row_data)
     return 0
 
 
@@ -47,12 +47,14 @@ def collate_row_data(raw_data):
         row_data.append([])
         row_data[-1].append(float(raw_data[i][1]))  # append price
 
-        previous_data = []
+        features = []
 
         for j in range(0, 10):
-            previous_data.append(float(raw_data[i - j - 1][0]))
-            previous_data.append(float(raw_data[i - j - 1][1]))
-        row_data[-1].append(previous_data)
+            features += [float(raw_data[i - j - 1][1])]  # add 10 days of row data
+
+        features += [1]  # constant feature
+
+        row_data[-1].append(features)
 
     return row_data
 
