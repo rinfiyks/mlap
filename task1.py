@@ -6,45 +6,54 @@ import csv
 import numpy
 import scipy.optimize
 
+previous_days_count = 10  # the number of previous days given
 
-def calculate_loss(theta, volumes, prices):
+
+def linear(InputFileName):
+    raw_data = list(csv.reader(open(InputFileName, 'rU')))
+
+    initial_theta = [0] * 2 * previous_days_count
+
+    row_data = collate_row_data(raw_data)
+
+    print("Starting fmin...")
+    theta = scipy.optimize.fmin(calculate_mean_squared_error, x0=initial_theta,
+                                args=tuple([row_data]))
+    print("fmin finished.")
+    print(theta)
+    return 0
+
+
+def calculate_mean_squared_error(theta, row_data):
     total_squared_loss = 0
 
-    for row in xrange(10, len(volumes) - 1):
-        recent_data = []  # last 10 days worth of data
-        # first 10 elements are volumes, last 10 are prices,
-        # in chronological order
+    for row in row_data:
+        total_squared_loss += (numpy.dot(theta, row[2] + row[3]) - row[1])**2
 
-        for i in range(row - 10, row):
-            recent_data.append(volumes[i])
-        for i in range(row - 10, row):
-            recent_data.append(prices[i])
-
-        total_squared_loss += (numpy.dot(theta, recent_data) - prices[row])**2
+    total_squared_loss /= len(row_data)
 
     print(total_squared_loss)
     return total_squared_loss
 
 
-def linear(InputFileName):
-    file_name = InputFileName
+def collate_row_data(raw_data):
+    row_data = []
 
-    volumes = []
-    prices = []
+    for i in xrange(10, len(raw_data)):
+        row_data.append([])
+        row_data[-1].append(float(raw_data[i][0]))  # append volume
+        row_data[-1].append(float(raw_data[i][1]))  # append price
 
-    with open(file_name, 'rU') as f:
-        reader = csv.reader(f)
-        for row in reader:
-            volumes.append(float(row[0]))
-            prices.append(float(row[1]))
+        volumes = []
+        prices = []
 
-    initial_theta = [0] * 20
+        for j in range(0, 10):
+            volumes.append(float(raw_data[i - j - 1][0]))
+            prices.append(float(raw_data[i - j - 1][1]))
+        row_data[-1].append(volumes)
+        row_data[-1].append(prices)
 
-    print("Starting BFGS...")
-    theta = scipy.optimize.fmin(calculate_loss, x0=initial_theta,
-                                args=(volumes, prices))
-    print("BFGS finished.")
-    print(theta)
-    return 0
+    return row_data
+
 
 linear(sys.argv[1])
