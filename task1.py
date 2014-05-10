@@ -7,7 +7,7 @@ import random
 import numpy
 import scipy.optimize
 
-previous_days_count = 1  # the number of previous days given
+previous_days_count = 10  # the number of previous days given
 
 
 def linear(InputFileName):
@@ -54,7 +54,6 @@ def collate_row_data(raw_data):
         row_data[-1].append(float(raw_data[i][1]))  # append price
 
         features = []
-
         features += [float(raw_data[i - 1][1])]  # yesterday's price
 
         row_data[-1].append(features)
