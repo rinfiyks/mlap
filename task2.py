@@ -13,7 +13,6 @@ number_of_classes = 5  # the number of classes used by logistic function
 
 
 def linear(InputFileName):
-    """ Perform linear regression on the given file """
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_linear(raw_data)
 
