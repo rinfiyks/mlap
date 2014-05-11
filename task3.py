@@ -1,6 +1,3 @@
-# Predict stock price for current day given stock price and stock volume for
-# past 10 days
-
 import sys
 import csv
 import random
@@ -10,6 +7,7 @@ import scipy.optimize
 
 previous_days_count = 10  # the number of previous days given
 number_of_classes = 5  # the number of classes used by logistic function
+runs = 0
 
 
 def linear(InputFileName):
@@ -92,7 +90,7 @@ def reglinear(InputFileName):
             lambda_best = lambda_param
 
         # print("Lambda: %.4f" % lambda_param)
-#         print("Error: %f" % average_error)
+        # print("Error: %f" % average_error)
 
     print("Best lambda: %.4f" % lambda_best)
 
@@ -101,6 +99,29 @@ def reglinear(InputFileName):
     # matplotlib.pyplot.show()
 
     return error_best
+
+
+def reglogistic(InputFileName):
+    raw_data = list(csv.reader(open(InputFileName, 'rU')))
+    row_data = collate_row_data_logistic(raw_data)
+    initial_theta = [0] * (len(row_data[0][-1]) * number_of_classes)
+
+    random.shuffle(row_data)
+    data_set_0 = row_data[0::2]
+    data_set_1 = row_data[1::2]
+
+    theta0 = train_data(data_set_0, data_set_1, initial_theta,
+                        calculate_classification_error, calculate_classification_error_gradient)[1]
+    theta1 = train_data(data_set_1, data_set_0, initial_theta,
+                        calculate_classification_error, calculate_classification_error_gradient)[1]
+
+    accuracy_0 = calculate_predictor_accuracy(theta0, data_set_1)
+    accuracy_1 = calculate_predictor_accuracy(theta1, data_set_0)
+
+    average_accuracy = (accuracy_0 + accuracy_1) / 2.0
+    print("accuracy_0: %f" % accuracy_0)
+    print("accuracy_1: %f" % accuracy_1)
+    return average_accuracy
 
 
 def calculate_predictor_accuracy(theta, row_data):
@@ -118,9 +139,8 @@ def calculate_predictor_accuracy(theta, row_data):
 
 
 def train_data(training_data, testing_data, theta, error_function, gradient_function):
-    # theta = scipy.optimize.fmin(error_function, x0=theta, args=tuple([training_data]), disp=False)
-    theta = scipy.optimize.fmin_bfgs(error_function, x0=theta,
-                                     args=tuple([training_data]), disp=False, fprime=gradient_function)
+    theta = scipy.optimize.fmin(error_function, x0=theta, args=tuple([training_data]), disp=False)
+    # theta = scipy.optimize.fmin_bfgs(error_function, x0=theta, args=tuple([training_data]), disp=False, fprime=gradient_function)
 
     error = error_function(theta, testing_data)
     print(theta)
@@ -199,42 +219,48 @@ def calculate_classification_error(theta, row_data):
 
 def calculate_classification_error_gradient(theta, row_data):
     number_of_features = len(row_data[0][-1])
-    gradient_dimension = number_of_features * number_of_classes
-    gradient = [0] * gradient_dimension
+    gradient = [[0] * number_of_features] * number_of_classes
 
     for row in row_data:
-        features = row[-1]
-        features_size = len(features)
+        c = row[2]  # the class of this row of data
+        for a in range(number_of_classes):
+            gradient[a] += numpy.dot(row[-1], indicator(a, c) - probability_of_class(row, theta, c))
 
-        max_feature = max(features)
-        logsumexp_term = [0] * gradient_dimension
+    result = []
+    for c in range(len(gradient)):
+        result += gradient[c].tolist()
 
-        for i in range(0, number_of_classes):
-            logsumexp_term += numpy.dot(features, math.exp(numpy.dot(features, get_theta_for_class(theta, i, features_size)) - max_feature))
+    return result
 
-        logsumexp_term = numpy.log(logsumexp_term)
 
-        gradient += (max_feature + logsumexp_term) - features
-
-    print(gradient)
-    return gradient
+def indicator(a, c):
+    if a == c:
+        return 1
+    return 0
 
 
 def predict_class(row, theta):
     max = 0
     max_class = -1
     probabilities = []
+
     for c in range(0, number_of_classes):
-        numerator = math.exp(numpy.dot(row[-1], get_theta_for_class(theta, c, len(row[-1]))))
-        denominator = 0
-        for i in range(0, number_of_classes):
-            denominator += math.exp(numpy.dot(row[-1], get_theta_for_class(theta, i, len(row[-1]))))
-        result = numerator / denominator
+        result = probability_of_class(row, theta, c)
         probabilities.append(result)
+
         if result > max:
             max = result
             max_class = c
+
     return max_class
+
+
+def probability_of_class(row, theta, c):
+    numerator = math.exp(numpy.dot(row[-1], get_theta_for_class(theta, c, len(row[-1]))))
+    denominator = 0
+    for i in range(0, number_of_classes):
+        denominator += math.exp(numpy.dot(row[-1], get_theta_for_class(theta, i, len(row[-1]))))
+    return numerator / denominator
 
 
 def get_theta_for_class(theta, c, features_size):
@@ -307,4 +333,4 @@ def collate_row_data_logistic(raw_data):
     return row_data
 
 
-print(reglinear(sys.argv[1]))
+print(logistic(sys.argv[1]))
