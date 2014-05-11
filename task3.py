@@ -55,8 +55,7 @@ def logistic(InputFileName):
     average_accuracy = (accuracy_0 + accuracy_1) / 2.0
     print("accuracy_0: %f" % accuracy_0)
     print("accuracy_1: %f" % accuracy_1)
-    print("average_accuracy: %f" % average_accuracy)
-    return 0
+    return average_accuracy
 
 
 def reglinear(InputFileName):
@@ -71,28 +70,35 @@ def reglinear(InputFileName):
 
     lambda_best = -1
     error_best = float("Inf")
-    iterations = 10
 
-    for i in range(iterations):
-        lambda_param = 0.1 - (0.01 * i)
+    errors = []
+    lambdas = []
+    for i in range(0, 50):
+        lambda_param = i / float(1000)
 
         error_0 = train_data_ridge(data_set_0, data_set_1, initial_theta, lambda_param,
                                    calculate_squared_error_ridge, calculate_squared_error_ridge_gradient)[0]
         error_1 = train_data_ridge(data_set_1, data_set_0, initial_theta, lambda_param,
                                    calculate_squared_error_ridge, calculate_squared_error_ridge_gradient)[0]
 
-        MSE_0 = error_0 / float(len(data_set_0))
-        MSE_1 = error_1 / float(len(data_set_1))
+        MSE_0 = error_0 / float(len(data_set_1))
+        MSE_1 = error_1 / float(len(data_set_0))
 
         average_error = (MSE_0 + MSE_1) / 2
+        errors.append(average_error)
+        lambdas.append(lambda_param)
         if average_error < error_best:
             error_best = average_error
             lambda_best = lambda_param
 
-        print("Lambda: %.2f" % lambda_param)
-        print("Error: %f" % average_error)
+        # print("Lambda: %.4f" % lambda_param)
+#         print("Error: %f" % average_error)
 
-    print("Best lambda: %.2f" % lambda_best)
+    print("Best lambda: %.4f" % lambda_best)
+
+    # matplotlib.pyplot.plot(lambdas, errors)
+    # matplotlib.pyplot.axis([0, lambda_param, 0.365, 0.4])
+    # matplotlib.pyplot.show()
 
     return error_best
 
@@ -126,8 +132,7 @@ def train_data_ridge(training_data, testing_data, theta, lambda_param, error_fun
     theta = scipy.optimize.fmin_bfgs(error_function, x0=theta,
                                      args=tuple([training_data, lambda_param]), disp=False, fprime=gradient_function)
 
-    error = error_function(theta, testing_data, lambda_param)
-    print(theta)
+    error = calculate_squared_error(theta, testing_data)
     return (error, theta)
 
 
@@ -157,12 +162,6 @@ def calculate_squared_error_ridge(theta, row_data, lambda_param):
 
     theta_term = sum(theta**2)
 
-    print
-    print("lambda: %f" % lambda_param)
-    print("lambda*loss")
-    print(lambda_param * loss_term)
-    print("1-lambda *thetas**2")
-    print((1 - lambda_param) * theta_term)
     return lambda_param * loss_term + (1 - lambda_param) * theta_term
 
 
@@ -173,6 +172,7 @@ def calculate_squared_error_ridge_gradient(theta, row_data, lambda_param):
         loss_term += numpy.dot(row[-1], row[0] - (numpy.dot(theta, row[-1])))
 
     gradient = 2 * ((1 - lambda_param) * theta - lambda_param * loss_term)
+    print gradient
     return gradient
 
 
@@ -264,8 +264,6 @@ def classify_day(today, yesterday):
 def get_features(rows):
     features = []
 
-    # for row in rows:
-    #     features += [float(row[1])]
     features += [float(rows[-1][1])]
     features += [1]  # constant
 
