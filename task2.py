@@ -13,12 +13,22 @@ number_of_classes = 5  # the number of classes used by logistic function
 
 
 def linear(InputFileName):
+    """ Perform linear regression on the given file """
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_linear(raw_data)
 
     initial_theta = [0] * len(row_data[0][-1])
 
-    return regression(row_data, initial_theta, calculate_mean_squared_error)[0]
+    random.shuffle(row_data)
+    data_set_0 = row_data[0::2]
+    data_set_1 = row_data[1::2]
+
+    error0 = train_data(data_set_0, data_set_1, initial_theta, calculate_mean_squared_error)[0]
+    error1 = train_data(data_set_1, data_set_0, initial_theta, calculate_mean_squared_error)[0]
+
+    average_error = (error0 + error1) / 2
+    print("Average error: %f" % average_error)
+    return average_error
 
 
 def logistic(InputFileName):
@@ -26,10 +36,27 @@ def logistic(InputFileName):
     row_data = collate_row_data_logistic(raw_data)
     initial_theta = [0] * (len(row_data[0][-1]) * number_of_classes)
 
-    theta = regression(row_data, initial_theta, calculate_mean_classification_error)[2]
+    random.shuffle(row_data)
+    data_set_0 = row_data[0::2]
+    data_set_1 = row_data[1::2]
 
+    theta0 = train_data(data_set_0, data_set_1, initial_theta, calculate_mean_classification_error)[1]
+    theta1 = train_data(data_set_1, data_set_0, initial_theta, calculate_mean_classification_error)[1]
+
+    accuracy_0 = calculate_predictor_accuracy(theta0, data_set_1)
+    accuracy_1 = calculate_predictor_accuracy(theta1, data_set_0)
+    average_accuracy = (accuracy_0 + accuracy_1) / 2.0
+
+    print("accuracy_0: %f" % accuracy_0)
+    print("accuracy_1: %f" % accuracy_1)
+    print("average_accuracy: %f" % average_accuracy)
+    return 0
+
+
+def calculate_predictor_accuracy(theta, row_data):
     correct = 0
     incorrect = 0
+
     for row in row_data:
         predicted_class = predict_class(row, theta)
         if predicted_class == row[2]:
@@ -37,31 +64,13 @@ def logistic(InputFileName):
         else:
             incorrect += 1
 
-    print("Correct: %d" % correct)
-    print("Incorrect: %d" % incorrect)
-    return 0
-
-
-def regression(row_data, initial_theta, error_function):
-    random.shuffle(row_data)
-    data_set_0 = row_data[0::2]
-    data_set_1 = row_data[1::2]
-
-    result1 = train_data(data_set_0, data_set_1, initial_theta, error_function)
-    result2 = train_data(data_set_1, data_set_0, initial_theta, error_function)
-    error1 = result1[0]
-    error2 = result2[0]
-    average_error = ((error1 + error2) / 2)
-
-    print("Average error: %f" % average_error)
-    return (average_error, result1[1], result2[1])
+    return correct / float(correct + incorrect)
 
 
 def train_data(training_data, testing_data, theta, error_function):
     theta = scipy.optimize.fmin(error_function, x0=theta, args=tuple([training_data]), disp=False)
     error = error_function(theta, testing_data)
     print(theta)
-    print("error: %f" % error)
     return (error, theta)
 
 
@@ -93,7 +102,6 @@ def calculate_mean_classification_error(theta, row_data):
 
         total_sum += max_feature + logsumexp_term - X_Theta_c_term
 
-    print total_sum
     return total_sum
 
 
@@ -111,7 +119,6 @@ def predict_class(row, theta):
         if result > max:
             max = result
             max_class = c
-    print("sum: %f" % sum(probabilities))
     return max_class
 
 
@@ -183,4 +190,4 @@ def collate_row_data_logistic(raw_data):
     return row_data
 
 
-logistic(sys.argv[1])
+print(logistic(sys.argv[1]))
