@@ -1,46 +1,47 @@
 from scipy.stats import beta
-import matplotlib.pyplot as plt
+import itertools
 import numpy
 import csv
 
 
 def bnbayesfit(StructureFileName, DataFileName):
-
     structure = read_file(StructureFileName)
     datapoints = read_file(DataFileName)
     number_of_nodes = len(structure[0])
 
     parameters = []
 
-    # for each node
+    # for each node:
     for node in range(number_of_nodes):
-        # get list of parents, e.g. [1, 4]
+
+        # get list of parents
         parents = get_parents(node, structure)
 
-        # generate list [0, 0], the values of the parents for this iteration
-        parent_values = [0] * len(parents)
+        # generate values parents could be, e.g. if there are 2 parents, this
+        # would be [(0, 0), (0, 1), (1, 0), (1, 1)]
+        parent_values_permutations = list(itertools.product((0, 1), repeat=len(parents)))
 
-        for x in range(2**len(parents)):
+        # iterate over the values the parents can be
+        for parent_values in parent_values_permutations:
             node_values = [0.5, 0.5]  # the a priori alpha and beta
 
+            # iterate over each line in the datapoints file
             for row in datapoints:
-                bad_row = False
+                good_row = True  # whether or not this datapoint has correct values for the parents
                 for i in range(len(parents)):
                     if row[parents[i]] != parent_values[i]:
-                        bad_row = True
-                if not bad_row:
-                    node_values[row[node]] += 1
+                        good_row = False
+                if good_row:
+                    # if the values for the parents are correct, increment the alpha or beta value by 1
+                    node_values[1 - row[node]] += 1
 
             # add result to parameters
             parameters.append([node, beta(node_values[0], node_values[1]).mean(), parents, list(parent_values)])
 
-            # lexicographically increment list of parent values
-            parent_values = lexicographically_increment_list(parent_values)
-
     for param in parameters:
         print param
 
-    return 0
+    return parameters
 
 
 def get_parents(node, structure):
@@ -52,25 +53,6 @@ def get_parents(node, structure):
     return parents
 
 
-def lexicographically_increment_list(l):
-    decreasing = False
-    for i in range(len(l)):
-        if not decreasing:
-            if l[i] == 0:
-                l[i] = 1
-                return l
-            else:
-                decreasing = True
-                l[i] = 0
-        elif l[i] == 0:
-                l[i] = 1
-                return l
-        else:
-            l[i] = 0
-
-    return l
-
-
 def read_file(file_name):
     data = []
     raw_data = list(csv.reader(open(file_name)))
@@ -80,14 +62,3 @@ def read_file(file_name):
 
 
 bnbayesfit("13/bnstruct.csv", "13/bndata.csv")
-
-
-def testingstuff():
-    rv = beta(5, 10)
-
-    x = numpy.linspace(0, numpy.minimum(rv.dist.b, 3))
-
-    h = plt.plot(x, rv.pdf(x))
-    print rv.mean()
-
-    plt.show(h)
