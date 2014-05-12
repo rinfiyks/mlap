@@ -25,11 +25,10 @@ def linear(InputFileName):
     error_1 = train_data(data_set_1, data_set_0, initial_theta,
                          calculate_squared_error, calculate_squared_error_gradient)[0]
 
-    MSE_0 = error_0 / float(len(data_set_0))
-    MSE_1 = error_1 / float(len(data_set_1))
+    MSE_0 = error_0 / float(len(data_set_1))
+    MSE_1 = error_1 / float(len(data_set_0))
 
     average_error = (MSE_0 + MSE_1) / 2
-    print("Average MSE: %f" % average_error)
     return average_error
 
 
@@ -42,13 +41,13 @@ def logistic(InputFileName):
     data_set_0 = row_data[0::2]
     data_set_1 = row_data[1::2]
 
-    theta0 = train_data(data_set_0, data_set_1, initial_theta,
+    theta_0 = train_data(data_set_0, data_set_1, initial_theta,
                         calculate_classification_error, calculate_classification_error_gradient)[1]
-    theta1 = train_data(data_set_1, data_set_0, initial_theta,
+    theta_1 = train_data(data_set_1, data_set_0, initial_theta,
                         calculate_classification_error, calculate_classification_error_gradient)[1]
 
-    accuracy_0 = calculate_predictor_accuracy(theta0, data_set_1)
-    accuracy_1 = calculate_predictor_accuracy(theta1, data_set_0)
+    accuracy_0 = calculate_predictor_accuracy(theta_0, data_set_1)
+    accuracy_1 = calculate_predictor_accuracy(theta_1, data_set_0)
 
     average_accuracy = (accuracy_0 + accuracy_1) / 2.0
     print("accuracy_0: %f" % accuracy_0)
@@ -73,9 +72,9 @@ def reglinear(InputFileName):
         lambda_param = i / float(1000)
 
         error_0 = train_data_ridge(data_set_0, data_set_1, initial_theta, lambda_param,
-                                   calculate_squared_error_ridge, calculate_squared_error_ridge_gradient)[0]
+                                   calculate_squared_error_ridge, calculate_squared_error_ridge_gradient, calculate_squared_error)[0]
         error_1 = train_data_ridge(data_set_1, data_set_0, initial_theta, lambda_param,
-                                   calculate_squared_error_ridge, calculate_squared_error_ridge_gradient)[0]
+                                   calculate_squared_error_ridge, calculate_squared_error_ridge_gradient, calculate_squared_error)[0]
 
         MSE_0 = error_0 / float(len(data_set_1))
         MSE_1 = error_1 / float(len(data_set_0))
@@ -89,10 +88,6 @@ def reglinear(InputFileName):
         # print("Error: %f" % average_error)
 
     print("Best lambda: %.4f" % lambda_best)
-
-    # matplotlib.pyplot.plot(lambdas, errors)
-    # matplotlib.pyplot.axis([0, lambda_param, 0.365, 0.4])
-    # matplotlib.pyplot.show()
 
     return error_best
 
@@ -110,20 +105,25 @@ def reglogistic(InputFileName):
     best_accuracy = 0
 
     for i in range(0, 5):
-        lambda_param = i / float(10)
+        lambda_param = i / float(5)
+        print("current lambda: %.4f" % lambda_param)
 
-        theta0 = train_data_ridge(data_set_0, data_set_1, initial_theta, lambda_param,
-                                  calculate_classification_error, calculate_classification_error_gradient)[1]
-        theta1 = train_data_ridge(data_set_1, data_set_0, initial_theta, lambda_param,
-                                  calculate_classification_error, calculate_classification_error_gradient)[1]
+        theta_0 = train_data_ridge(data_set_0, data_set_1, initial_theta, lambda_param,
+                                  calculate_classification_error_ridge, calculate_classification_error_ridge_gradient, calculate_classification_error)[1]
+        theta_1 = train_data_ridge(data_set_1, data_set_0, initial_theta, lambda_param,
+                                  calculate_classification_error_ridge, calculate_classification_error_ridge_gradient, calculate_classification_error)[1]
 
-        accuracy_0 = calculate_predictor_accuracy(theta0, data_set_1)
-        accuracy_1 = calculate_predictor_accuracy(theta1, data_set_0)
+        accuracy_0 = calculate_predictor_accuracy(theta_0, data_set_1)
+        accuracy_1 = calculate_predictor_accuracy(theta_1, data_set_0)
 
         average_accuracy = (accuracy_0 + accuracy_1) / 2.0
         if average_accuracy > best_accuracy:
             best_accuracy = average_accuracy
             lambda_best = lambda_param
+        print("theta_0:")
+        print(theta_0)
+        print("theta_1:")
+        print(theta_1)
         print("accuracy_0: %f" % accuracy_0)
         print("accuracy_1: %f" % accuracy_1)
 
@@ -131,35 +131,20 @@ def reglogistic(InputFileName):
     return best_accuracy
 
 
-def calculate_predictor_accuracy(theta, row_data):
-    correct = 0
-    incorrect = 0
-
-    for row in row_data:
-        predicted_class = predict_class(row, theta)
-        if predicted_class == row[2]:
-            correct += 1
-        else:
-            incorrect += 1
-
-    return correct / float(correct + incorrect)
-
-
 def train_data(training_data, testing_data, theta, error_function, gradient_function):
     # theta = scipy.optimize.fmin(error_function, x0=theta, args=tuple([training_data]), disp=False)
     theta = scipy.optimize.fmin_bfgs(error_function, x0=theta, args=tuple([training_data]), disp=False, fprime=gradient_function)
 
     error = error_function(theta, testing_data)
-    # print(theta)
+    print(theta)
     return (error, theta)
 
 
-def train_data_ridge(training_data, testing_data, theta, lambda_param, error_function, gradient_function):
+def train_data_ridge(training_data, testing_data, theta, lambda_param, error_function, gradient_function, testing_function):
     # theta = scipy.optimize.fmin(error_function, x0=theta, args=tuple([training_data, lambda_param]), disp=False)
-    theta = scipy.optimize.fmin_bfgs(error_function, x0=theta,
-                                     args=tuple([training_data, lambda_param]), disp=False, fprime=gradient_function)
+    theta = scipy.optimize.fmin_bfgs(error_function, x0=theta, args=tuple([training_data, lambda_param]), disp=False, fprime=gradient_function)
 
-    error = calculate_squared_error(theta, testing_data)
+    error = testing_function(theta, testing_data)
     return (error, theta)
 
 
@@ -187,9 +172,9 @@ def calculate_squared_error_ridge(theta, row_data, lambda_param):
     for row in row_data:
         loss_term += (numpy.dot(theta, row[-1]) - row[0])**2
 
-    theta_term = sum(theta**2)
+    regularisation_term = sum(theta**2)
 
-    return lambda_param * loss_term + (1 - lambda_param) * theta_term
+    return lambda_param * loss_term + (1 - lambda_param) * regularisation_term
 
 
 def calculate_squared_error_ridge_gradient(theta, row_data, lambda_param):
@@ -204,8 +189,40 @@ def calculate_squared_error_ridge_gradient(theta, row_data, lambda_param):
 
 
 def calculate_classification_error(theta, row_data):
+    result = calculate_log_likelihood(theta, row_data)
+    print result
+    return result
+
+
+def calculate_classification_error_gradient(theta, row_data):
+    number_of_features = len(row_data[0][-1])
+    gradient = [[0] * number_of_features] * number_of_classes
+
+    for row in row_data:
+        c = row[2]  # the class of this row of data
+        for a in range(number_of_classes):
+            gradient[a] += numpy.dot(row[-1], indicator(a, c) - probability_of_class(row, theta, c))
+
+    result = []
+    for c in range(len(gradient)):
+        result += gradient[c].tolist()
+    print result
+    return result
+
+
+def calculate_classification_error_ridge(theta, row_data, lambda_param):
+    error_term =  calculate_log_likelihood(theta, row_data)
+    regularisation_term = sum(theta**2)
+    return (1 - lambda_param) * regularisation_term + lambda_param * error_term
+
+
+def calculate_classification_error_ridge_gradient(theta, row_data, lambda_param):
+    error_term = calculate_classification_error_gradient(theta, row_data)
+    return numpy.dot(lambda_param, error_term) + 2 * (1 - lambda_param) * theta
+
+
+def calculate_log_likelihood(theta, row_data):
     total_sum = 0
-    print theta
 
     for row in row_data:
         features = row[-1]
@@ -222,34 +239,24 @@ def calculate_classification_error(theta, row_data):
     return total_sum
 
 
-def calculate_classification_error_gradient(theta, row_data):
-    number_of_features = len(row_data[0][-1])
-    gradient = [[0] * number_of_features] * number_of_classes
-
-    for row in row_data:
-        c = row[2]  # the class of this row of data
-        for a in range(number_of_classes):
-            gradient[a] += numpy.dot(row[-1], indicator(a, c) - probability_of_class(row, theta, c))
-
-    result = []
-    for c in range(len(gradient)):
-        result += gradient[c].tolist()
-
-    return result
-
-
-def calculate_classification_error_ridge(theta, row_data, lambda_param):
-    return 0
-
-
-def calculate_classification_error_ridge_gradient(theta, row_data, lambda_param):
-    return 0
-
-
 def indicator(a, c):
     if a == c:
         return 1
     return 0
+
+
+def calculate_predictor_accuracy(theta, row_data):
+    correct = 0
+    incorrect = 0
+
+    for row in row_data:
+        predicted_class = predict_class(row, theta)
+        if predicted_class == row[2]:
+            correct += 1
+        else:
+            incorrect += 1
+
+    return correct / float(correct + incorrect)
 
 
 def predict_class(row, theta):
@@ -312,7 +319,7 @@ def get_features(rows):
     features = []
 
     features += [float(rows[-1][1])]
-    features += [1]  # constant
+    # features += [1]  # constant
 
     return features
 
