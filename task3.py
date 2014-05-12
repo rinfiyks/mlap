@@ -69,8 +69,6 @@ def reglinear(InputFileName):
     lambda_best = -1
     error_best = float("Inf")
 
-    errors = []
-    lambdas = []
     for i in range(0, 50):
         lambda_param = i / float(1000)
 
@@ -111,22 +109,20 @@ def reglogistic(InputFileName):
     lambda_best = -1
     best_accuracy = 0
 
-    errors = []
-    lambdas = []
     for i in range(0, 5):
         lambda_param = i / float(10)
 
         theta0 = train_data_ridge(data_set_0, data_set_1, initial_theta, lambda_param,
-                            calculate_classification_error, calculate_classification_error_gradient)[1]
-        theta1 = train_data_ridge(data_set_1, data_set_0, initial_theta, lambda_param
-                            calculate_classification_error, calculate_classification_error_gradient)[1]
+                                  calculate_classification_error, calculate_classification_error_gradient)[1]
+        theta1 = train_data_ridge(data_set_1, data_set_0, initial_theta, lambda_param,
+                                  calculate_classification_error, calculate_classification_error_gradient)[1]
 
         accuracy_0 = calculate_predictor_accuracy(theta0, data_set_1)
         accuracy_1 = calculate_predictor_accuracy(theta1, data_set_0)
 
         average_accuracy = (accuracy_0 + accuracy_1) / 2.0
         if average_accuracy > best_accuracy:
-            best_accuracy = average_error
+            best_accuracy = average_accuracy
             lambda_best = lambda_param
         print("accuracy_0: %f" % accuracy_0)
         print("accuracy_1: %f" % accuracy_1)
