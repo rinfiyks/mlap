@@ -7,7 +7,6 @@ import scipy.optimize
 
 previous_days_count = 10  # the number of previous days given
 number_of_classes = 5  # the number of classes used by logistic function
-runs = 0
 
 
 def linear(InputFileName):
@@ -136,7 +135,6 @@ def train_data(training_data, testing_data, theta, error_function, gradient_func
     theta = scipy.optimize.fmin_bfgs(error_function, x0=theta, args=tuple([training_data]), disp=False, fprime=gradient_function)
 
     error = error_function(theta, testing_data)
-    print(theta)
     return (error, theta)
 
 
@@ -318,8 +316,11 @@ def classify_day(today, yesterday):
 def get_features(rows):
     features = []
 
-    features += [float(rows[-1][1])]
+    # features += [float(rows[-1][1])]
     # features += [1]  # constant
+    for row in rows:
+        features += [float(row[0]) / 10000]
+        features += [float(row[1])]
 
     return features
 
@@ -361,4 +362,4 @@ def collate_row_data_logistic(raw_data):
     return row_data
 
 
-print(logistic(sys.argv[1]))
+print(linear(sys.argv[1]))
