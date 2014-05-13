@@ -10,6 +10,8 @@ number_of_classes = 5  # the number of classes used by logistic function
 
 
 def linear(InputFileName):
+    """Perform linear regression on the data provided in InputFileName.
+    """
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_linear(raw_data)
 
@@ -32,6 +34,8 @@ def linear(InputFileName):
 
 
 def logistic(InputFileName):
+    """Perform logistic regression on the data provided in InputFileName.
+    """
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_logistic(raw_data)
     initial_theta = [0] * (len(row_data[0][-1]) * number_of_classes)
@@ -55,6 +59,8 @@ def logistic(InputFileName):
 
 
 def reglinear(InputFileName):
+    """Perform linear regression with ridge regularisation on the data provided in InputFileName.
+    """
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_linear(raw_data)
 
@@ -92,6 +98,8 @@ def reglinear(InputFileName):
 
 
 def reglogistic(InputFileName):
+    """Perform logistic regression with ridge regularisation on the data provided in InputFileName.
+    """
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_logistic(raw_data)
     initial_theta = [0] * (len(row_data[0][-1]) * number_of_classes)
@@ -131,6 +139,8 @@ def reglogistic(InputFileName):
 
 
 def train_data(training_data, testing_data, theta, error_function, gradient_function):
+    """Attempt to find a minimal value for theta such that the loss function is minimised.
+    """
     # theta = scipy.optimize.fmin(error_function, x0=theta, args=tuple([training_data]), disp=False)
     theta = scipy.optimize.fmin_bfgs(error_function, x0=theta, args=tuple([training_data]), disp=False, fprime=gradient_function)
 
@@ -139,6 +149,8 @@ def train_data(training_data, testing_data, theta, error_function, gradient_func
 
 
 def train_data_ridge(training_data, testing_data, theta, lambda_param, error_function, gradient_function, testing_function):
+    """Attempt to find a minimal value for theta such that the loss function is minimised.
+    """
     # theta = scipy.optimize.fmin(error_function, x0=theta, args=tuple([training_data, lambda_param]), disp=False)
     theta = scipy.optimize.fmin_bfgs(error_function, x0=theta, args=tuple([training_data, lambda_param]), disp=False, fprime=gradient_function)
 
@@ -147,6 +159,8 @@ def train_data_ridge(training_data, testing_data, theta, lambda_param, error_fun
 
 
 def calculate_squared_error(theta, row_data):
+    """Calculates the total squared error for all of the data, given theta.
+    """
     total_squared_loss = 0
 
     for row in row_data:
@@ -156,6 +170,8 @@ def calculate_squared_error(theta, row_data):
 
 
 def calculate_squared_error_gradient(theta, row_data):
+    """Calculates the gradient of the squared error function.
+    """
     gradient = [0] * len(row_data[0][-1])
 
     for row in row_data:
@@ -165,6 +181,8 @@ def calculate_squared_error_gradient(theta, row_data):
 
 
 def calculate_squared_error_ridge(theta, row_data, lambda_param):
+    """Calculates the loss function for squared error with ridge regression.
+    """
     loss_term = 0
 
     for row in row_data:
@@ -176,6 +194,8 @@ def calculate_squared_error_ridge(theta, row_data, lambda_param):
 
 
 def calculate_squared_error_ridge_gradient(theta, row_data, lambda_param):
+    """Calculates the gradient for the loss function for squared error with ridge regression.
+    """
     loss_term = [0] * len(row_data[0][-1])
 
     for row in row_data:
@@ -187,20 +207,25 @@ def calculate_squared_error_ridge_gradient(theta, row_data, lambda_param):
 
 
 def calculate_classification_error(theta, row_data):
-    print theta
+    """Calculates the negative log likelihood so that it can be minimised.
+    """
     result = calculate_log_likelihood(theta, row_data)
     print result
     return result
 
 
 def calculate_classification_error_gradient(theta, row_data):
+    """Calculates the gradient of the log likelihood function.
+    """
     number_of_features = len(row_data[0][-1])
     gradient = [[0] * number_of_features] * number_of_classes
 
     for row in row_data:
         c = row[2]  # the class of this row of data
         for a in range(number_of_classes):
-            gradient[a] += numpy.dot(row[-1], indicator(a, c) - probability_of_class(row, theta, c))
+            # because the log likelihood was negated to allow minimisation, the
+            # gradient function must be negated
+            gradient[a] -= numpy.dot(row[-1], indicator(a, c) - probability_of_class(row, theta, c))
 
     result = []
     for c in range(len(gradient)):
@@ -209,17 +234,23 @@ def calculate_classification_error_gradient(theta, row_data):
 
 
 def calculate_classification_error_ridge(theta, row_data, lambda_param):
+    """Calculates the negative log likelihood with ridge regularisation so that it can be minimised.
+    """
     error_term = calculate_log_likelihood(theta, row_data)
     regularisation_term = sum(theta**2)
     return (1 - lambda_param) * regularisation_term + lambda_param * error_term
 
 
 def calculate_classification_error_ridge_gradient(theta, row_data, lambda_param):
+    """Calculates the gradient of the log likelihood with ridge regularisation.
+    """
     error_term = calculate_classification_error_gradient(theta, row_data)
     return numpy.dot(lambda_param, error_term) + 2 * (1 - lambda_param) * theta
 
 
 def calculate_log_likelihood(theta, row_data):
+    """Calculates the log likelihood of the data given theta.
+    """
     total_sum = 0
 
     for row in row_data:
@@ -238,12 +269,16 @@ def calculate_log_likelihood(theta, row_data):
 
 
 def indicator(a, c):
+    """The indicator function for a class.
+    """
     if a == c:
         return 1
     return 0
 
 
 def calculate_predictor_accuracy(theta, row_data):
+    """Calculates the accuracy of the classifier.
+    """
     correct = 0
     incorrect = 0
 
@@ -258,6 +293,8 @@ def calculate_predictor_accuracy(theta, row_data):
 
 
 def predict_class(row, theta):
+    """Finds the class with the highest probability that the data is likely to be.
+    """
     max = 0
     max_class = -1
     probabilities = []
@@ -274,6 +311,8 @@ def predict_class(row, theta):
 
 
 def probability_of_class(row, theta, c):
+    """Calculates the probability that the data is of a particular class.
+    """
     numerator_exponent = numpy.dot(row[-1], get_theta_for_class(theta, c, len(row[-1])))
 
     denominator_exponents = []
@@ -290,12 +329,16 @@ def probability_of_class(row, theta, c):
 
 
 def get_theta_for_class(theta, c, features_size):
+    """Gets the theta vector for a specific class.
+    """
     start_index = features_size * c
     end_index = features_size * (c + 1)
     return theta[start_index:end_index]
 
 
 def classify_day(today, yesterday):
+    """Calculate the class of a day.
+    """
     stock_difference = (today - yesterday) / yesterday
 
     classification = 0
@@ -314,6 +357,8 @@ def classify_day(today, yesterday):
 
 
 def get_features(rows):
+    """Generate the features used for regression.
+    """
     features = []
 
     features += [float(rows[-1][1])]
@@ -326,6 +371,8 @@ def get_features(rows):
 
 
 def collate_row_data_linear(raw_data):
+    """Expands each row in the file and adds all of the necessary data to it in order to perform linear regression."
+    """
     row_data = []
 
     for i in xrange(previous_days_count, len(raw_data)):
@@ -341,6 +388,8 @@ def collate_row_data_linear(raw_data):
 
 
 def collate_row_data_logistic(raw_data):
+    """Expands each row in the file and adds all of the necessary data to it in order to perform logistic regression."
+    """
     row_data = []
 
     for i in xrange(previous_days_count, len(raw_data)):
