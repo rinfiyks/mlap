@@ -28,7 +28,7 @@ def fit(structure, datapoints):
 
         # iterate over the values the parents can be
         for parent_values in parent_values_permutations:
-            node_values = [0.5, 0.5]  # the a priori alpha and beta
+            node_values = [1, 1]  # the uniform prior for alpha and beta
 
             # iterate over each line in the datapoints file
             for row in datapoints:
@@ -102,8 +102,7 @@ def bnsample(fittedbn, nsamples):
 
         samples.append(generated_values)
 
-    print
-    fit(read_file("13/bnstruct.csv"), samples)
+    # fit(read_file("13/bnstruct.csv"), samples)
 
     return samples
 
@@ -119,6 +118,12 @@ def find_generation_order(parents):
     return generation_order
 
 
+def are_parents_generated(parents, generated):
+    generated = set(generated)
+    difference = [i for i in parents if i not in generated]
+    return len(difference) == 0
+
+
 def matching_param(param, generated_values, gen):
     if param[0] != gen:
         return False
@@ -129,12 +134,5 @@ def matching_param(param, generated_values, gen):
     return True
 
 
-def are_parents_generated(parents, generated):
-    generated = set(generated)
-    difference = [i for i in parents if i not in generated]
-    return len(difference) == 0
-
-
-# bnbayesfit("13/bnstruct.csv", "13/bndata.csv")
 f = bnbayesfit("13/bnstruct.csv", "13/bndata.csv")
-bnsample(f, 10000)
+# bnsample(f, 10)

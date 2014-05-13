@@ -41,9 +41,9 @@ def logistic(InputFileName):
     data_set_1 = row_data[1::2]
 
     theta_0 = train_data(data_set_0, data_set_1, initial_theta,
-                        calculate_classification_error, calculate_classification_error_gradient)[1]
+                         calculate_classification_error, calculate_classification_error_gradient)[1]
     theta_1 = train_data(data_set_1, data_set_0, initial_theta,
-                        calculate_classification_error, calculate_classification_error_gradient)[1]
+                         calculate_classification_error, calculate_classification_error_gradient)[1]
 
     accuracy_0 = calculate_predictor_accuracy(theta_0, data_set_1)
     accuracy_1 = calculate_predictor_accuracy(theta_1, data_set_0)
@@ -108,9 +108,9 @@ def reglogistic(InputFileName):
         print("current lambda: %.4f" % lambda_param)
 
         theta_0 = train_data_ridge(data_set_0, data_set_1, initial_theta, lambda_param,
-                                  calculate_classification_error_ridge, calculate_classification_error_ridge_gradient, calculate_classification_error)[1]
+                                   calculate_classification_error_ridge, calculate_classification_error_ridge_gradient, calculate_classification_error)[1]
         theta_1 = train_data_ridge(data_set_1, data_set_0, initial_theta, lambda_param,
-                                  calculate_classification_error_ridge, calculate_classification_error_ridge_gradient, calculate_classification_error)[1]
+                                   calculate_classification_error_ridge, calculate_classification_error_ridge_gradient, calculate_classification_error)[1]
 
         accuracy_0 = calculate_predictor_accuracy(theta_0, data_set_1)
         accuracy_1 = calculate_predictor_accuracy(theta_1, data_set_0)
@@ -187,6 +187,7 @@ def calculate_squared_error_ridge_gradient(theta, row_data, lambda_param):
 
 
 def calculate_classification_error(theta, row_data):
+    print theta
     result = calculate_log_likelihood(theta, row_data)
     print result
     return result
@@ -204,12 +205,11 @@ def calculate_classification_error_gradient(theta, row_data):
     result = []
     for c in range(len(gradient)):
         result += gradient[c].tolist()
-    print result
     return result
 
 
 def calculate_classification_error_ridge(theta, row_data, lambda_param):
-    error_term =  calculate_log_likelihood(theta, row_data)
+    error_term = calculate_log_likelihood(theta, row_data)
     regularisation_term = sum(theta**2)
     return (1 - lambda_param) * regularisation_term + lambda_param * error_term
 
@@ -316,11 +316,11 @@ def classify_day(today, yesterday):
 def get_features(rows):
     features = []
 
-    # features += [float(rows[-1][1])]
+    features += [float(rows[-1][1])]
     # features += [1]  # constant
-    for row in rows:
-        features += [float(row[0]) / 10000]
-        features += [float(row[1])]
+    # for row in rows:
+    #     features += [float(row[0]) / 10000]
+    #     features += [float(row[1])]
 
     return features
 
@@ -362,4 +362,4 @@ def collate_row_data_logistic(raw_data):
     return row_data
 
 
-print(linear(sys.argv[1]))
+print(reglogistic(sys.argv[1]))
