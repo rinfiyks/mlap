@@ -12,6 +12,9 @@ number_of_classes = 5  # the number of classes used by logistic function
 def linear(InputFileName):
     """Perform linear regression on the data provided in InputFileName.
     """
+    # csv reader open() needed 'rU' flags to open the file in linux,
+    # not tested in windows/mac
+    # if this doesn't work, just try open(InputFileName)
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_linear(raw_data)
 
@@ -36,6 +39,9 @@ def linear(InputFileName):
 def reglinear(InputFileName):
     """Perform linear regression with ridge regularisation on the data provided in InputFileName.
     """
+    # csv reader open() needed 'rU' flags to open the file in linux,
+    # not tested in windows/mac
+    # if this doesn't work, just try open(InputFileName)
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_linear(raw_data)
 
@@ -70,6 +76,9 @@ def reglinear(InputFileName):
 def logistic(InputFileName):
     """Perform logistic regression on the data provided in InputFileName.
     """
+    # csv reader open() needed 'rU' flags to open the file in linux,
+    # not tested in windows/mac
+    # if this doesn't work, just try open(InputFileName)
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_logistic(raw_data)
     initial_theta = [0] * (len(row_data[0][-1]) * number_of_classes)
@@ -94,6 +103,9 @@ def logistic(InputFileName):
 def reglogistic(InputFileName):
     """Perform logistic regression with ridge regularisation on the data provided in InputFileName.
     """
+    # csv reader open() needed 'rU' flags to open the file in linux,
+    # not tested in windows/mac
+    # if this doesn't work, just try open(InputFileName)
     raw_data = list(csv.reader(open(InputFileName, 'rU')))
     row_data = collate_row_data_logistic(raw_data)
     initial_theta = [0] * (len(row_data[0][-1]) * number_of_classes)
