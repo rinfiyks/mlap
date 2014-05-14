@@ -33,6 +33,40 @@ def linear(InputFileName):
     return average_error
 
 
+def reglinear(InputFileName):
+    """Perform linear regression with ridge regularisation on the data provided in InputFileName.
+    """
+    raw_data = list(csv.reader(open(InputFileName, 'rU')))
+    row_data = collate_row_data_linear(raw_data)
+
+    initial_theta = [0] * len(row_data[0][-1])
+
+    random.shuffle(row_data)
+    data_set_0 = row_data[0::2]
+    data_set_1 = row_data[1::2]
+
+    lambda_best = -1
+    error_best = float("Inf")
+
+    for i in range(0, 100):
+        lambda_param = i / float(100)
+
+        error_0 = train_data_ridge(data_set_0, data_set_1, initial_theta, lambda_param,
+                                   calculate_squared_error_ridge, calculate_squared_error_ridge_gradient, calculate_squared_error)[0]
+        error_1 = train_data_ridge(data_set_1, data_set_0, initial_theta, lambda_param,
+                                   calculate_squared_error_ridge, calculate_squared_error_ridge_gradient, calculate_squared_error)[0]
+
+        MSE_0 = error_0 / float(len(data_set_1))
+        MSE_1 = error_1 / float(len(data_set_0))
+
+        average_error = (MSE_0 + MSE_1) / 2
+        if average_error < error_best:
+            error_best = average_error
+            lambda_best = lambda_param
+
+    return error_best
+
+
 def logistic(InputFileName):
     """Perform logistic regression on the data provided in InputFileName.
     """
@@ -53,48 +87,8 @@ def logistic(InputFileName):
     accuracy_1 = calculate_predictor_accuracy(theta_1, data_set_0)
 
     average_accuracy = (accuracy_0 + accuracy_1) / 2.0
-    print("accuracy_0: %f" % accuracy_0)
-    print("accuracy_1: %f" % accuracy_1)
+
     return average_accuracy
-
-
-def reglinear(InputFileName):
-    """Perform linear regression with ridge regularisation on the data provided in InputFileName.
-    """
-    raw_data = list(csv.reader(open(InputFileName, 'rU')))
-    row_data = collate_row_data_linear(raw_data)
-
-    initial_theta = [0] * len(row_data[0][-1])
-
-    random.shuffle(row_data)
-    data_set_0 = row_data[0::2]
-    data_set_1 = row_data[1::2]
-
-    lambda_best = -1
-    error_best = float("Inf")
-
-    for i in range(0, 50):
-        lambda_param = i / float(1000)
-
-        error_0 = train_data_ridge(data_set_0, data_set_1, initial_theta, lambda_param,
-                                   calculate_squared_error_ridge, calculate_squared_error_ridge_gradient, calculate_squared_error)[0]
-        error_1 = train_data_ridge(data_set_1, data_set_0, initial_theta, lambda_param,
-                                   calculate_squared_error_ridge, calculate_squared_error_ridge_gradient, calculate_squared_error)[0]
-
-        MSE_0 = error_0 / float(len(data_set_1))
-        MSE_1 = error_1 / float(len(data_set_0))
-
-        average_error = (MSE_0 + MSE_1) / 2
-        if average_error < error_best:
-            error_best = average_error
-            lambda_best = lambda_param
-
-        # print("Lambda: %.4f" % lambda_param)
-        # print("Error: %f" % average_error)
-
-    print("Best lambda: %.4f" % lambda_best)
-
-    return error_best
 
 
 def reglogistic(InputFileName):
@@ -111,9 +105,8 @@ def reglogistic(InputFileName):
     lambda_best = -1
     best_accuracy = 0
 
-    for i in range(0, 5):
-        lambda_param = i / float(5)
-        print("current lambda: %.4f" % lambda_param)
+    for i in range(0, 100):
+        lambda_param = i / float(100)
 
         theta_0 = train_data_ridge(data_set_0, data_set_1, initial_theta, lambda_param,
                                    calculate_classification_error_ridge, calculate_classification_error_ridge_gradient, calculate_classification_error)[1]
@@ -127,14 +120,7 @@ def reglogistic(InputFileName):
         if average_accuracy > best_accuracy:
             best_accuracy = average_accuracy
             lambda_best = lambda_param
-        print("theta_0:")
-        print(theta_0)
-        print("theta_1:")
-        print(theta_1)
-        print("accuracy_0: %f" % accuracy_0)
-        print("accuracy_1: %f" % accuracy_1)
 
-    print("Best lambda: %.4f" % lambda_best)
     return best_accuracy
 
 
@@ -202,7 +188,6 @@ def calculate_squared_error_ridge_gradient(theta, row_data, lambda_param):
         loss_term += numpy.dot(row[-1], row[0] - (numpy.dot(theta, row[-1])))
 
     gradient = 2 * ((1 - lambda_param) * theta - lambda_param * loss_term)
-    print gradient
     return gradient
 
 
@@ -210,7 +195,6 @@ def calculate_classification_error(theta, row_data):
     """Calculates the negative log likelihood so that it can be minimised.
     """
     result = calculate_log_likelihood(theta, row_data)
-    print result
     return result
 
 
@@ -361,11 +345,11 @@ def get_features(rows):
     """
     features = []
 
-    features += [float(rows[-1][1])]
     # features += [1]  # constant
     # for row in rows:
     #     features += [float(row[0]) / 10000]
     #     features += [float(row[1])]
+    features += [float(rows[-1][1])]  # yesterday's price
 
     return features
 
@@ -411,4 +395,3 @@ def collate_row_data_logistic(raw_data):
     return row_data
 
 
-print(reglogistic(sys.argv[1]))
