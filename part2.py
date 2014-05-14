@@ -6,12 +6,16 @@ import csv
 
 
 def bnbayesfit(StructureFileName, DataFileName):
+    """Acquires the necessary data to call the fit() function
+    """
     structure = read_file(StructureFileName)
     datapoints = read_file(DataFileName)
     return fit(structure, datapoints)
 
 
 def fit(structure, datapoints):
+    """Returns the mean for each parameter in the provided Bayesian network.
+    """
     number_of_nodes = len(structure[0])
 
     parameters = []
@@ -46,13 +50,12 @@ def fit(structure, datapoints):
             # add result to parameters
             parameters.append([node, beta(node_values[0], node_values[1]).mean(), parents, list(parent_values)])
 
-    for param in parameters:
-        print param
-
     return parameters
 
 
 def get_parents(node, structure):
+    """Returns a list of parents for a node
+    """
     parents_structure = numpy.transpose(structure)
     parents = []
     for i in range(len(parents_structure[node])):
@@ -62,6 +65,8 @@ def get_parents(node, structure):
 
 
 def read_file(file_name):
+    """Reads a file and returns the result as a 2D list
+    """
     data = []
     raw_data = list(csv.reader(open(file_name)))
     for row in raw_data:
@@ -70,6 +75,9 @@ def read_file(file_name):
 
 
 def bnsample(fittedbn, nsamples):
+    """Generates a number of samples as specified by nsamples. Each sample is an observation
+    of the variables specified in the Bayesian network inferred from fittedbn.
+    """
     parents = []
 
     for param in fittedbn:
@@ -102,13 +110,12 @@ def bnsample(fittedbn, nsamples):
 
         samples.append(generated_values)
 
-    # fit(read_file("13/bnstruct.csv"), samples)
-
     return samples
 
 
 def find_generation_order(parents):
-    # calculate a correct generation order, where parents are generated first
+    """Calculates an order in which each node's parents are generated before it.
+    """
     generation_order = []
     for gen in range(len(parents)):
         for i in range(len(parents)):
@@ -119,20 +126,19 @@ def find_generation_order(parents):
 
 
 def are_parents_generated(parents, generated):
+    """Checks whether the parents have been generated yet.
+    """
     generated = set(generated)
     difference = [i for i in parents if i not in generated]
     return len(difference) == 0
 
 
 def matching_param(param, generated_values, gen):
+    """Check that a parameter matches the current generation.
+    """
     if param[0] != gen:
         return False
-
     for p in range(len(param[2])):  # iterate over length of the node's parents
         if param[3][p] != generated_values[param[2][p]]:  # if the parent's value doesn't match
             return False
     return True
-
-
-f = bnbayesfit("13/bnstruct.csv", "13/bndata.csv")
-# bnsample(f, 10)
